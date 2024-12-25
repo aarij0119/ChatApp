@@ -1,21 +1,41 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+
 
 const Register = () => {
-  const[fullname,setname] = useState('');
-  const[email,setemail] = useState('')
-  const[password,setpassword] = useState('')
-  const[number,setnumber] = useState('')
-  const formhandler = (e) => {
+  const [username, setname] = useState('');
+  const [email, setemail] = useState('');
+  const [password, setpassword] = useState('');
+  const [number, setnumber] = useState('');
+  const navigate = useNavigate()
+  const formhandler = async (e) => {
     e.preventDefault()
-    console.log(fullname,email,password,number);
-    console.log("form submitted");
+    const userdata = { username, email, password, number };
+    try {
+      const response = await fetch('http://localhost:3000/chat', {
+        method: "POST",
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(userdata)
+      })
+      if (response) {
+        const result = await response.json()
+        console.log('user created successfully ', result);
+        // Clear input fields
+        setname('')
+        setemail('')
+        setpassword('')
+        setnumber('')
+        navigate('/nextpage',{state: {user: result}})
+      } else {
+        console.error('Failed to create user')
+      }
 
-    // Clear input fields
-    setname('')
-    setemail('')
-    setpassword('')
-    setnumber('')
+    } catch (error) {
+      console.error("Error", error)
+    }
+
   }
   return (
     <div className='w-full min-h-screen bg-zinc-900'>
@@ -24,7 +44,7 @@ const Register = () => {
           <h1 className='text-2xl text-center text-blue-600 font-bold'>Register</h1>
           <div>
             <label className='block mb-1 text-white'>Full Name</label>
-            <input value={fullname} onChange={(e)=> setname(e.target.value)} name='username' required className='w-full p-2 rounded-lg outline-none' />
+            <input value={username} onChange={(e) => setname(e.target.value)} name='username' required className='w-full p-2 rounded-lg outline-none' />
           </div>
           <div>
             <label className='block mb-1 text-white'>Email</label>
@@ -32,7 +52,7 @@ const Register = () => {
           </div>
           <div>
             <label className='block mb-1 text-white'>Password</label>
-            <input value={password} onChange={(e)=> setpassword(e.target.value)} name='password' required className='w-full p-2 rounded-lg outline-none' />
+            <input value={password} onChange={(e) => setpassword(e.target.value)} name='password' required className='w-full p-2 rounded-lg outline-none' />
           </div>
           <div>
             <label className='block mb-1 text-white'>Number</label>

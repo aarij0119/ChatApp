@@ -2,20 +2,15 @@ import React from 'react';
 import { Route, Routes } from 'react-router-dom';
 import Register from './Components/Register';
 import Login from './Components/Login';
-import io from 'socket.io-client'
-
-const ENDPOINT = 'http://localhost:3000'
-const socket = io(ENDPOINT, {transports:['websocket']})
+import Nextpage from './Components/nexpage';
 
 const App = () => {
-  socket.on('connect',()=>{
-    
-  })
   return (
     <>
     <Routes>
       <Route path="/" element={<Register />} />
       <Route path="/login" element={<Login />} />
+      <Route path='/nextpage' element={<Nextpage />}></Route>
     </Routes>
     
   </>

@@ -5,37 +5,47 @@ const cors = require('cors');
 const socketIo = require('socket.io');
 const http = require('http');
 
-const connection = require('./config.js/connection');
-const userMOdel = require('./models/user')
+const connectDB = require('./config/connection');
+const userModel = require('./models/user');
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
-app.use(express.urlencoded({extended:true}));
+app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 
-const server = http.createServer(app)
-const io = socketIo(server);
 
-app.get('/chat',async function(req,res){
-const[username,email,password,number] = req.body;
-const user = await userMOdel.create({
-        username,
-        email,
-        password,
-        number
-    })
-    res.send(user)
-})
 
-app.get('/',function(req,res){
-    res.send('Connected To backend')
+const server = http.createServer(app);
+const io = socketIo(server, {
+  cors: {
+    origin: "http://localhost:3000", 
+    methods: ["GET", "POST"]
+  }
 });
 
-io.on("connection",() => {
-    console.log("User Connected ")
-})
+app.post('/chat', async function(req, res) {
+  const { username, email, password, number } = req.body;
+  try {
+    const user = await userModel.create({
+      username,
+      email,
+      password,
+      number
+    });
+    res.status(201).send(user);
+  } catch (error) {
+    res.status(500).json({ message: 'Error creating user', error });
+  }
+});
 
+app.get('/', function(req, res) {
+  res.send('Connected To backend');
+});
 
+io.on("connection", () => {
+  console.log("User Connected");
+});
 
-
-server.listen(3000);
+server.listen(3000, () => {
+  console.log('Server is running on port 3000');
+});
