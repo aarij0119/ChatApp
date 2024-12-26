@@ -39,11 +39,19 @@ app.post('/chat', async function(req, res) {
 });
 
 app.get('/', function(req, res) {
-  res.send('Connected To backend');
+  res.send('Connected to server');
 });
 
-io.on("connection", () => {
+io.on("connection", (socket) => {
   console.log("User Connected");
+
+  socket.on('joined',({user}) => {
+    console.log(`${user.username} has joined`);
+  });
+  socket.on('message',(message)=>{
+  const messages = message.message;
+  socket.emit('reply', {messages});
+  })
 });
 
 server.listen(3000, () => {
