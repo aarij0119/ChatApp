@@ -11,6 +11,7 @@ const NextPage = () => {
 
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState([]);
+  const [joinmessage,setjoinmessage] = useState('');
 
   const messageHandler = (e) => {
     e.preventDefault();
@@ -24,6 +25,17 @@ const NextPage = () => {
       console.log("One user Connected");
       socket.emit('joined', { user });
     });
+    socket.on('welcome',(data)=>{
+      console.log(data.message, data.username);
+      setjoinmessage(data.username)
+      setTimeout(() => {
+        setjoinmessage('')
+      }, 2000);
+    });
+
+    socket.on('userDisconnected',(data)=>{
+      console.log(data.message)
+    })
 
     socket.on('reply', (data) => {
       console.log('coming from backend:', data.messages);
@@ -34,23 +46,29 @@ const NextPage = () => {
     return () => {
       socket.off('connect');
       socket.off('reply');
+      socket.off('welcome')
     };
   }, []);
 
   return (
-    <div className='w-full h-screen bg-zinc-900'>
-      <div className='absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white w-1/2 h-3/4'>
-        <div className='w-full bg-blue-600 h-16'></div>
-        <div className='Chat p-2 '>
-          {messages.map((msg, index) => (
-            <div key={index} className='bg-green-400 w-fit px-2 py-1 rounded-3xl mb-2'>
-              {msg}
-            </div>
-          ))}
+    <div className='w-full min-h-screen bg-zinc-900 p-2'>
+        {joinmessage ? (
+          <div className='bg-green-700 w-fit px-2 py-1 rounded-full'> 
+          <h1 className='text-white uppercase'>{joinmessage}</h1> 
         </div>
-        <div className='bg-black w-full h-12 absolute bottom-0 flex items-center px-0.5 py-0.5 gap-1'>
-          <form onSubmit={messageHandler} className='w-full flex items-center'>
-            <div className='w-[80%] h-full bg-red-400'>
+        ) : null}
+        <div className='absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white w-1/2 h-3/4'>
+          <div className='w-full bg-blue-600 h-16'></div>
+          <div className='Chat p-2 overflow-y-auto h-[34rem]'>
+            {messages.map((msg, index) => (
+              <div key={index} className='bg-green-400 w-fit px-2 py-1 rounded-3xl mb-2'>
+                {msg}
+              </div>
+            ))}
+          </div>
+          <div className='w-full h-12'>
+          <form onSubmit={messageHandler} className='w-full flex items-center mx-auto'>
+            <div className='w-[80%] h-full border-zinc-900 border-2'>
               <input
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
@@ -58,13 +76,15 @@ const NextPage = () => {
                 type='text'
               />
             </div>
-            <div className='w-[20%] p-2 bg-green-700 flex items-center justify-center h-full text-white text-lg rounded-3xl'>
-              <input type='submit' value='Send' />
+            <div className='w-[20%] p-2.5  bg-blue-700 flex items-center justify-center text-white text-lg'>
+              <input className='w-full h-full cursor-pointer' type='submit' value='Send' />
             </div>
           </form>
         </div>
+        </div>
+      
       </div>
-    </div>
+    
   );
 };
 
