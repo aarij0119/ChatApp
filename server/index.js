@@ -13,8 +13,6 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 
-
-
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
@@ -22,6 +20,8 @@ const io = socketIo(server, {
     methods: ["GET", "POST"]
   }
 });
+
+let users = {}; 
 
 app.post('/chat', async function(req, res) {
   const { username, email, password, number } = req.body;
@@ -45,13 +45,25 @@ app.get('/', function(req, res) {
 io.on("connection", (socket) => {
   console.log("User Connected");
 
-  socket.on('joined',({user}) => {
-    console.log(`${user.username} has joined`);
+  socket.on('joined', ({ user }) => {
+    const id = socket.id;
+    const username = user.username;
+    users[id] = username; 
+    console.log(`${username}, has joined. ID is ${id}`);
+    socket.emit('welcome', { message: 'Admin, welcome', username });
   });
-  socket.on('message',(message)=>{
-  const messages = message.message;
-  socket.emit('reply', {messages});
-  })
+
+  socket.on('message', (message) => {
+    const messages = message.message;
+    io.emit('reply', { messages });
+  });
+
+  socket.on('disconnect', () => {
+    const username = users[socket.id]; // Get username by socket ID
+    console.log(`User disconnected: ${username} (ID: ${socket.id})`);
+    io.emit('userDisconnected', { message: `User ${username} (ID: ${socket.id}) has left the chat` });
+    delete users[socket.id]; // Remove user from the map after retrieving the username
+  });
 });
 
 server.listen(3000, () => {
