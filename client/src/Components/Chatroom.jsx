@@ -79,24 +79,25 @@ const NextPage = () => {
           <h1>User: {user.username}</h1>
         </div>
         {/* Chat showing */}
-        <ScrollToBottom className='h-full bg-[#594CD7]'>
-          <div className='Chat p-2 overflow-y-auto md:h-full h-[34.5rem]   flex flex-col'>
+        <ScrollToBottom className='h-full'>
+          <div className='Chat p-2 overflow-y-auto md:h-full h-[34.5rem] bg-[#594CD7] flex flex-col'>
             {messages.map((msg, index) => (
               <div
                 key={index}
-                className={`mb-2 w-fit max-w-xs self-${msg.username === user.username ? 'start' : 'end'}`}
+                className={`mb-2 w-full flex ${msg.username === user.username ? 'justify-start' : 'justify-end'}`}
               >
-                <h1 className='text-[11px]'>{msg.time}</h1>
-                <h1 className={`text-sm font-bold w-fit px-4 py-1 ${msg.username === user.username ? 'rounded-2xl rounded-tl-none bg-[#7B70EE] text-white' : 'rounded-2xl rounded-tr-none bg-white'}`}>
-                  {msg.text}
-                </h1>
-                <h4 className='flex items-end justify-end text-[12px]'>{msg.username}</h4>
+                <div className={`max-w-xs`}>
+                  <h1 className='text-[11px]'>{msg.time}</h1>
+                  <h1 className={`text-sm font-bold w-fit px-4 py-1 ${msg.username === user.username ? 'rounded-2xl rounded-tl-none bg-[#7B70EE] text-white' : 'rounded-2xl rounded-tr-none bg-white'}`}>
+                    {msg.text}
+                  </h1>
+                  <h4 className='flex items-end justify-end text-[12px]'>{msg.username}</h4>
+                </div>
               </div>
             ))}
           </div>
         </ScrollToBottom>
-        
-        <div className='w-full h-12'>
+        <div className='w-full'>
           <form onSubmit={messageHandler} className='w-full flex items-center mx-auto'>
             <div className='w-[80%] h-full border-zinc-900 border-2'>
               <input
