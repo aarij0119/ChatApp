@@ -7,10 +7,11 @@ const Register = () => {
   const [email, setemail] = useState('');
   const [password, setpassword] = useState('');
   const [number, setnumber] = useState('');
-  const navigate = useNavigate()
+  const navigate = useNavigate();
   const formhandler = async (e) => {
     e.preventDefault()
     const userdata = { username, email, password, number };
+    // console.log(userdata)
     try {
       const response = await fetch('http://localhost:3000/chat', {
         method: "POST",
@@ -33,7 +34,7 @@ const Register = () => {
       }
 
     } catch (error) {
-      console.error("Error", error)
+      console.error("Error", error);
     }
 
   }

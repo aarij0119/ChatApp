@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import ScrollToBottom from 'react-scroll-to-bottom';
 import { useLocation } from 'react-router-dom';
 import io from 'socket.io-client';
 
@@ -11,62 +12,91 @@ const NextPage = () => {
 
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState([]);
-  const [joinmessage,setjoinmessage] = useState('');
+  const [joinMessage, setJoinMessage] = useState('');
+  const [userDisconnect, setUserDisconnect] = useState('');
 
   const messageHandler = (e) => {
     e.preventDefault();
-    console.log(message);
-    socket.emit('message', { message });
-    setMessage('');
+    if (message) {
+      console.log(message);
+      const timestamp = new Date().toLocaleTimeString();
+      socket.emit('message', { message, user, timestamp });
+      setMessage('');
+    }
   };
 
   useEffect(() => {
     socket.on('connect', () => {
       console.log("One user Connected");
-      socket.emit('joined', { user });
-    });
-    socket.on('welcome',(data)=>{
-      console.log(data.message, data.username);
-      setjoinmessage(data.username)
-      setTimeout(() => {
-        setjoinmessage('')
-      }, 2000);
     });
 
-    socket.on('userDisconnected',(data)=>{
-      console.log(data.message)
-    })
+    socket.emit('joined', { user });
+
+    socket.on('welcome', (data) => {
+      setJoinMessage(data.username);
+      setTimeout(() => {
+        setJoinMessage('');
+      }, 3000);
+    });
+
+    socket.on('userDisconnected', (data) => {
+      setUserDisconnect(data.username);
+      setTimeout(() => {
+        setUserDisconnect('');
+      }, 4000);
+    });
 
     socket.on('reply', (data) => {
+      console.log("User sent message", data.user);
       console.log('coming from backend:', data.messages);
-      const messages = data.messages;
-      setMessages((prevMessages) => [...prevMessages, messages]);
+      console.log("time is ", data.time);
+      const newMessage = { text: data.messages, username: data.user, time: data.time };
+      setMessages((prevMessages) => [...prevMessages, newMessage]);
     });
 
     return () => {
       socket.off('connect');
       socket.off('reply');
-      socket.off('welcome')
+      socket.off('welcome');
+      socket.off('userDisconnected');
     };
   }, []);
 
   return (
     <div className='w-full min-h-screen bg-zinc-900 p-2'>
-        {joinmessage ? (
-          <div className='bg-green-700 w-fit px-2 py-1 rounded-full'> 
-          <h1 className='text-white uppercase'>{joinmessage}</h1> 
+      {/* Flash Message of join */}
+      {joinMessage && (
+        <div className='bg-blue-700 w-fit px-2 py-1 rounded-xl absolute top-4 right-4'>
+          <h1 className='text-white uppercase'>{joinMessage} has joined the chat</h1>
         </div>
-        ) : null}
-        <div className='absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white w-1/2 h-3/4'>
-          <div className='w-full bg-blue-600 h-16'></div>
-          <div className='Chat p-2 overflow-y-auto h-[34rem]'>
+      )}
+      {/* Flash Message of left */}
+      <div className={`${userDisconnect.length > 0 ? 'text-white bg-red-700 w-fit px-2 rounded-full py-1 absolute top-4 right-4' : null}`}>
+        <h1>{userDisconnect}</h1>
+      </div>
+      <div className='md:absolute md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2  bg-white md:w-4/5 lg:w-1/2 md:h-[60%] lg:h-[55%] h-full'>
+        <div className='w-full h-12 bg-gray-300 flex items-center px-2'>
+          <h1>User: {user.username}</h1>
+        </div>
+        {/* Chat showing */}
+        <ScrollToBottom className='h-full bg-[#594CD7]'>
+          <div className='Chat p-2 overflow-y-auto md:h-full h-[34.5rem]   flex flex-col'>
             {messages.map((msg, index) => (
-              <div key={index} className='bg-green-400 w-fit px-2 py-1 rounded-3xl mb-2'>
-                {msg}
+              <div
+                key={index}
+                className={`mb-2 w-fit max-w-xs self-${msg.username === user.username ? 'start' : 'end'}`}
+              >
+                <h1 className='text-[11px]'>{msg.time}</h1>
+                <h1 className={`text-sm font-bold w-fit px-4 py-1 ${msg.username === user.username ? 'rounded-2xl rounded-tl-none bg-[#7B70EE] text-white' : 'rounded-2xl rounded-tr-none bg-white'}`}>
+                  {msg.text}
+                </h1>
+                <h4 className='flex items-end justify-end text-[12px]'>{msg.username}</h4>
               </div>
             ))}
           </div>
-          <div className='w-full h-12'>
+        </ScrollToBottom>
+        
+        <div className='w-full h-12'>
           <form onSubmit={messageHandler} className='w-full flex items-center mx-auto'>
             <div className='w-[80%] h-full border-zinc-900 border-2'>
               <input
@@ -76,15 +106,13 @@ const NextPage = () => {
                 type='text'
               />
             </div>
-            <div className='w-[20%] p-2.5  bg-blue-700 flex items-center justify-center text-white text-lg'>
+            <div className='w-[20%] p-2.5 bg-blue-700 flex items-center justify-center text-white text-lg'>
               <input className='w-full h-full cursor-pointer' type='submit' value='Send' />
             </div>
           </form>
         </div>
-        </div>
-      
       </div>
-    
+    </div>
   );
 };
 
